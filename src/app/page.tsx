@@ -154,8 +154,14 @@ const ProjectCard = ({ p }: { p: Project }) => (
         ))}
       </div>
       <div className="flex flex-wrap gap-3">
-        {p.links?.map((l: any) => (
-          <a key={l.label} href={l.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm underline underline-offset-4">
+        {p.links?.map((l: LinkRef) => (
+          <a
+            key={l.label}
+            href={l.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-sm underline underline-offset-4"
+          >
             {l.label} <ExternalLink className="w-4 h-4" />
           </a>
         ))}
