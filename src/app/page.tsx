@@ -186,6 +186,7 @@ export default function Portfolio() {
             <a href="#education" className="hover:underline underline-offset-4">Education</a>
             <a href="#publications" className="hover:underline underline-offset-4">Publications</a>
             <a href="#contact" className="hover:underline underline-offset-4">Contact</a>
+            <a href="/ai-lab" className="hover:underline underline-offset-4">AI Lab</a>
           </div>
         </nav>
       </header>
