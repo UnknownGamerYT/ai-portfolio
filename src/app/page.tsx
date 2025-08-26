@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+type LinkRef = { label: string; href: string };
+type Project = {
+  title: string;
+  tags: string[];
+  description: string;
+  links?: LinkRef[];
+  icon: React.ReactNode;
+};
 // --- Editable Profile Data ---------------------------------------------------
 const profile = {
   name: "Kyriakos Antoniou",
@@ -129,7 +137,7 @@ const Section = ({ id, title, children }: { id: string; title: string; children:
   </section>
 );
 
-const ProjectCard = ({ p }: { p: any }) => (
+const ProjectCard = ({ p }: { p: Project }) => (
   <Card className="h-full">
     <CardHeader className="pb-2">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -216,9 +224,9 @@ export default function Portfolio() {
       {/* Projects */}
       <Section id="projects" title="Selected Projects">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {projects.map((p) => (
-            <ProjectCard key={p.title} p={p} />
-          ))}
+          {projects.map((p: Project) => (
+          <ProjectCard key={p.title} p={p} />
+        ))}
         </div>
       </Section>
 
@@ -279,8 +287,8 @@ export default function Portfolio() {
       {/* Contact */}
       <Section id="contact" title="Get in touch">
         <div className="max-w-2xl">
-          <p className="text-slate-700 mb-6">If you'd like to chat about research, internships, or collaborations, ping me via email or LinkedIn. I'm especially interested in embedded AI, efficient deep learning, and robotics applications.</p>
-          <div className="flex flex-wrap gap-3">
+          <p className="text-slate-700 mb-6"> If you’d like to chat about research, internships, or collaborations, ping me via email or LinkedIn. I’m especially interested in embedded AI, efficient deep learning, and robotics applications.</p>
+            <div className="flex flex-wrap gap-3">
             <a href={profile.links.email}><Button className="gap-2"><Mail className="w-4 h-4"/> Email me</Button></a>
             <a href={profile.links.linkedin} target="_blank" rel="noreferrer"><Button variant="secondary" className="gap-2"><Linkedin className="w-4 h-4"/> LinkedIn</Button></a>
             <a href={profile.links.github} target="_blank" rel="noreferrer"><Button variant="ghost" className="gap-2"><Github className="w-4 h-4"/> GitHub</Button></a>
