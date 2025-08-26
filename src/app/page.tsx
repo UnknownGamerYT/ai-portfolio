@@ -18,14 +18,14 @@ type Project = {
 // --- Editable Profile Data ---------------------------------------------------
 const profile = {
   name: "Kyriakos Antoniou",
-  headline: "MSc Artificial Intelligence — Model Compression • TensorRT • Robotics",
-  location: "Groningen / Warsaw",
+  headline: "MSc Artificial Intelligence",
+  location: "Groningen (Netheralnsd) / Nicosia (Cyprus)",
   blurb:
     "Master's student focused on tensor decompositions (CP/Tucker/TT) for CNN compression and deployment with NVIDIA TensorRT on embedded robotics (Jetson).",
   links: {
-    github: "https://github.com/yourhandle",
-    linkedin: "https://linkedin.com/in/yourhandle",
-    email: "mailto:you@example.com",
+    github: "https://github.com/UnknownGamerYT",
+    linkedin: "https://www.linkedin.com/in/kyriakos-antoniou-a26b64230/",
+    email: "kyriakosantoniou3@gmail.com",
     cv: "/Kyriakos_Antoniou_CV.pdf",
   },
 };
@@ -88,15 +88,18 @@ const education = [
     degree: "MSc Artificial Intelligence",
     years: "2024 – 2026 (exp)",
     details: [
-      "Robotics for AI, Deep Learning, Privacy‑Preserving ML",
+      "State of the Art AI \"understanding\"",
       "Thesis on tensor decompositions and TensorRT",
     ],
   },
   {
-    school: "BSc (prior)",
-    degree: "BSc Computer Science / Related",
-    years: "2019 – 2023",
-    details: ["Algorithms, Systems, Math for ML"],
+    school: "University of York",
+    degree: "BSc Computer Science and Mathematics 50/50",
+    years: "2020 – 2023",
+    details: [
+      "Exploration of the Computer Science and Mathematics domains",
+      "Thesis Simulating Urban Airspace Resource Management"
+    ],
   },
 ];
 
