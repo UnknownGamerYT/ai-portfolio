@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Github, Linkedin, Mail, FileDown, ExternalLink, GraduationCap, Cpu, Layers, Timer, BookOpen, Rocket, ChevronDown, ChevronUp, ShieldCheck, BarChart3, Gamepad, Network } from "lucide-react";
+import { Github, Linkedin, Mail, FileDown, ExternalLink, GraduationCap, Cpu, Layers, Timer, BookOpen, Rocket, ChevronDown, ChevronUp, ShieldCheck, BarChart3, Gamepad, Network, Sun, Moon, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,29 +90,29 @@ const projects: Project[] = [
     description:
       "Fine-tuning self-supervised ViTs for referring expression grounding; evaluate by IoU/accuracy; visualize attention maps and boxes.",
     links: [
-      { label: "Report", href: "/reports/UDL___Self_Supervised_Visual_Grounding.pdf" }
+      { label: "Proposal", href: "/reports/UDL___Self_Supervised_Visual_Grounding.pdf" }
     ],
     icon: <Layers className="w-5 h-5" />,
   },
 
   // ===== Deep Learning Assignments =====
   {
-    title: "Handwritten Digit Recognition (DL A1)",
+    title: "Handwritten Digit Recognition",
     tags: ["LogReg", "CNN", "PCA", "Data Aug"],
     description:
       "Digits benchmark with classical ML and a lightweight CNN; PCA+features boosted linear baseline; tuned CNN reached ~96% test accuracy.",
     links: [
-      { label: "Report", href: "/reports/Deep_Learning___Assignment_1.pdf" }
+      { label: "Report", href: "/reports/ML_Project.pdf" }
     ],
     icon: <Cpu className="w-5 h-5" />,
   },
   {
-    title: "DDPM — Paper Deep-Dive (DL A2)",
+    title: "DDPM — Paper Deep-Dive (DL A1)",
     tags: ["Diffusion", "U-Net", "DDPM"],
     description:
       "Technical walkthrough of DDPMs: forward noising schedule, reverse denoising with U-Net, and objective design choices.",
     links: [
-      { label: "Report", href: "/reports/Deep_Learning_Assignment_2.pdf" }
+      { label: "Report", href: "/reports/Deep_Learning_Assignment_1.pdf" }
     ],
     icon: <BookOpen className="w-5 h-5" />,
   },
@@ -136,8 +136,7 @@ const projects: Project[] = [
     description:
       "Timing reproduction model with noise/punishment manipulations; mixed-effects analysis (lme4/lmerTest) on experimental data.",
     links: [
-      { label: "Final Report", href: "/reports/Cognitive_Modelling__Final_Project.pdf" },
-      { label: "Appendix/Notes", href: "/reports/Cognitive_Modelling.pdf" }
+      { label: "Report", href: "/reports/Cognitive_Modelling.pdf" }
     ],
     icon: <Timer className="w-5 h-5" />,
   },
@@ -147,14 +146,14 @@ const projects: Project[] = [
     description:
       "Two-card visual search game (8 symbols/card) with scoring, penalties, and highlighted model attention; full class design for deck, cards, and play.",
     links: [
-      { label: "Report", href: "/reports/AppliedCogMod.pdf" }
+      { label: "Report", href: "/reports/Cognitive_Modelling__Final_Project.pdf" }
     ],
     icon: <Gamepad className="w-5 h-5" />,
   },
 
   // ===== Reinforcement Learning =====
   {
-    title: "Deep RL: Catch with the DQN Family",
+    title: "Deep Reinforcement Learning: Catch with the DQN Family",
     tags: ["DQN", "DDQN", "Dueling", "DQV", "DQV-Max"],
     description:
       "Implemented and compared five DRL algorithms on Catch; all reached ~90% success post-training with replay + target networks.",
@@ -169,7 +168,7 @@ const projects: Project[] = [
     description:
       "Reimplemented IDVQ+DRSC feature pipeline and XNES optimisation for tiny recurrent policy networks on Atari tasks.",
     links: [
-      { label: "Report", href: "/reports/ML_Project.pdf" }
+      { label: "Report", href: "/reports/Deep_Learning_Assignment_2.pdf" }
     ],
     icon: <Network className="w-5 h-5" />,
   },
@@ -181,15 +180,14 @@ const projects: Project[] = [
     description:
       "Course project on MAS formalisms and reasoning; modelling, verification, and coordination strategies.",
     links: [
-      { label: "Project Report", href: "/reports/LAMAS_proj.pdf" },
-      { label: "Beta Report", href: "/reports/MultiAgent_System__Beta_Report__Copy_.pdf" }
+      { label: "Report", href: "/reports/MultiAgent_System__Beta_Report__Copy_.pdf" }
     ],
     icon: <Layers className="w-5 h-5" />,
   },
 
   // ===== Methodology / Survey =====
   {
-    title: "Methodology in AI — Survey & Notes",
+    title: "Methodology in AI — A literature Survey on Quantum Neural Networks",
     tags: ["Survey", "Methodology", "AI"],
     description:
       "Critical review of contemporary AI methodologies; strengths, limitations, and reproducibility considerations.",
@@ -218,7 +216,7 @@ const projects: Project[] = [
     description:
       "Trained a lightweight CNN to read analogue clocks (hour+minute) without transfer learning, with strict model size constraints.",
     links: [
-      { label: "Report", href: "/reports/Deep_Learning___Assignment_1.pdf" } // same DL A1 report if you like, or replace later
+      { label: "Report", href: "#" } 
     ],
     icon: <Timer className="w-5 h-5" />,
   },
@@ -228,7 +226,7 @@ const projects: Project[] = [
     description:
       "Explored VAE/GAN/diffusion pipelines to synthesize clock faces conditioned on time labels.",
     links: [
-      { label: "Report", href: "/reports/Deep_Learning_Assignment_2.pdf" } // placeholder; swap with a dedicated report if you have one
+      { label: "Report", href: "#" } // placeholder; swap with a dedicated report if you have one
     ],
     icon: <Rocket className="w-5 h-5" />,
   },
@@ -238,7 +236,7 @@ const projects: Project[] = [
     title: "World of Tanks — Loldle-style Web Game",
     tags: ["Full-stack", "React", "Scraping"],
     description:
-      "Designed a guessing game using tank datasets; clean UI and daily puzzles.",
+      "Designed a guessing game using tank datasets; clean UI and daily puzzles. (Unpublished)",
     links: [{ label: "Prototype", href: "#" }],
     icon: <Rocket className="w-5 h-5" />,
   },
@@ -361,14 +359,16 @@ export default function Portfolio() {
            "min-h-screen",
           // background by theme
           theme === "colorful"
-            ? "bg-gradient-to-b from-fuchsia-100 via-sky-100 to-emerald-100 dark:from-fuchsia-950 dark:via-slate-900 dark:to-emerald-950"
-            : "bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900",
+            ? "bg-gradient-to-b from-fuchsia-300 via-sky-300 to-emerald-400"
+            : "bg-white dark:bg-slate-950",
           "text-slate-900 dark:text-slate-100"
         )}
       >
 
       {/* Nav */}
-      <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70 border-b border-slate-200 dark:border-slate-800">
+      <header className={cx("sticky top-0 z-50 backdrop-blur border-b", theme === "colorful"
+        ? "supports-[backdrop-filter]:bg-gradient-to-r from-fuchsia-200/70 via-sky-200/70 to-emerald-200/70 dark:from-fuchsia-900/70 dark:via-sky-900/70 dark:to-emerald-900/70 border-transparent"
+        : "supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70 border-slate-200 dark:border-slate-800")}>
         <nav className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <a href="#home" className="font-semibold">KA</a>
           <div className="hidden md:flex items-center gap-6 text-sm">
@@ -380,42 +380,40 @@ export default function Portfolio() {
             <a href="/ai-lab" className="hover:underline underline-offset-4">AI Lab</a>
           </div>
           <div className="flex items-center gap-2">
-          <button
-            onClick={() => setTheme("light")}
-            className={cx(
-              "px-2 py-1 rounded-md border text-xs",
-              theme === "light"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            )}
-          >
-            Light
-          </button>
-          <button
-            onClick={() => setTheme("dark")}
-            className={cx(
-              "px-2 py-1 rounded-md border text-xs",
-              theme === "dark"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            )}
-          >
-            Dark
-          </button>
-          <button
-            onClick={() => setTheme("colorful")}
-            className={cx(
-              "px-2 py-1 rounded-md border text-xs",
-              theme === "colorful"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            )}
-          >
-            Colorful
-          </button>
+          <div className="flex items-center">
+            <button
+              onClick={() => {
+                if (theme === "light") setTheme("dark");
+                else if (theme === "dark") setTheme("colorful");
+                else setTheme("light");
+              }}
+              className={cx(
+                  // base
+                  "p-2 rounded-md text-xs transition-colors",
+
+                  // light/dark keep a border
+                  theme === "light" && "border-0 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-yellow-500",
+                  theme === "dark" && "border-0 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-blue-400",
+
+                  // colorful: full gradient, NO border
+                  theme === "colorful" &&
+                    "border-0 text-fuchsia-600 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 " +
+                    "hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500",
+                    // kill borders/rings/outlines + avoid subpixel seam
+                    "shadow-none focus:outline-none focus:ring-0 ring-0 ring-offset-0 outline-none",
+                    "overflow-hidden [background-clip:padding-box] transform-gpu"
+                )}
+              >
+                {theme === "light" && <Sun className="w-5 h-5" />}
+                {theme === "dark" && <Moon className="w-5 h-5" />}
+
+                {/* Colorful: icon directly on the gradient button (no inner white wrapper) */}
+                {theme === "colorful" && <Palette className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
         </nav>
-      </header>
+      </header> 
 
       {/* Hero */}
       <section id="home" className="pt-16 md:pt-24 pb-10">
@@ -430,21 +428,26 @@ export default function Portfolio() {
             <p className="mt-4 text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">{profile.blurb}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={profile.links.cv} target="_blank" rel="noreferrer">
-                <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"><FileDown className="w-4 h-4" /> Download CV</Button>
+                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}>
+                  <FileDown className="w-4 h-4" /> Download CV
+                </Button>
               </a>
               <a href={profile.links.github} target="_blank" rel="noreferrer">
-                <Button variant="secondary" className="gap-2"><Github className="w-4 h-4" /> GitHub</Button>
+                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}><Github className="w-4 h-4" /> GitHub</Button>
               </a>
               <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
-                <Button variant="secondary" className="gap-2"><Linkedin className="w-4 h-4" /> LinkedIn</Button>
+                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}><Linkedin className="w-4 h-4" /> LinkedIn</Button>
               </a>
               <a href={profile.links.email}>
-                <Button variant="secondary" className="gap-2"><Mail className="w-4 h-4" /> Contact</Button>
+                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}><Mail className="w-4 h-4" /> Contact</Button>
               </a>
             </div>
           </div>
           <div className="md:col-span-1">
-            <Card className="bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
+            <Card className={cx("border",theme === "colorful"
+              ? "bg-gradient-to-r from-fuchsia-400/80 via-sky-400/80 to-emerald-400/80 border-0 text-slate-900"
+              : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+            )}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Quick Facts</CardTitle>
               </CardHeader>
@@ -518,8 +521,7 @@ export default function Portfolio() {
                   "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200",
                   "dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700",
                   // subtle accent in colorful theme
-                  theme === "colorful" &&
-                    "bg-gradient-to-r from-fuchsia-100 to-emerald-100 text-slate-800 border-0 dark:from-fuchsia-900 dark:to-emerald-900 dark:text-slate-100"
+                  theme === "colorful" && "bg-gradient-to-r from-fuchsia-100 to-emerald-100 text-slate-800 border-0 dark:from-fuchsia-900 dark:to-emerald-900 dark:text-slate-100"
                 )}
                 aria-expanded={showAllTags}
               >
@@ -686,8 +688,13 @@ export default function Portfolio() {
             { title: "Data/Stats", items: ["Pandas", "NumPy", "scikit‑learn", "R (lme4)"] },
             { title: "Web/Apps", items: ["React", "Next.js", "FastAPI", "SQL"] },
           ].map((g) => (
-            <Card key={g.title}>
-              <CardHeader className="pb-2"><CardTitle className="text-lg">{g.title}</CardTitle></CardHeader>
+            <Card
+              key={g.title}
+              className="bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">{g.title}</CardTitle>
+              </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {g.items.map((s) => (
                   <Badge key={s} variant="outline">{s}</Badge>
@@ -721,7 +728,10 @@ export default function Portfolio() {
               ],
             },
           ].map((e) => (
-            <Card key={e.school}>
+            <Card
+              key={e.school}
+              className="bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+            >
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">{e.school}</CardTitle>
                 <p className="text-sm text-muted-foreground">{e.degree} • {e.years}</p>
@@ -748,7 +758,7 @@ export default function Portfolio() {
               link: "#",
             },
           ].map((pub) => (
-            <div key={pub.title} className="p-4 border rounded-xl bg-white">
+            <div  key={pub.title} className="p-4 border rounded-xl bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <h3 className="font-medium">{pub.title}</h3>
@@ -764,11 +774,23 @@ export default function Portfolio() {
       {/* Contact */}
       <Section id="contact" title="Get in touch">
         <div className="max-w-2xl">
-          <p className="text-slate-700 mb-6"> If you’d like to chat about research, internships, or collaborations, ping me via email or LinkedIn. I’m especially interested in embedded AI, efficient deep learning, and robotics applications.</p>
+          <p className="text-slate-700 dark:text-slate-300 mb-6"> If you’d like to chat about research, internships, or collaborations, ping me via email or LinkedIn. I’m especially interested in embedded AI, efficient deep learning, and robotics applications.</p>
           <div className="flex flex-wrap gap-3">
-            <a href={profile.links.email}><Button className="gap-2"><Mail className="w-4 h-4"/> Email me</Button></a>
-            <a href={profile.links.linkedin} target="_blank" rel="noreferrer"><Button variant="secondary" className="gap-2"><Linkedin className="w-4 h-4"/> LinkedIn</Button></a>
-            <a href={profile.links.github} target="_blank" rel="noreferrer"><Button variant="ghost" className="gap-2"><Github className="w-4 h-4"/> GitHub</Button></a>
+            <a href={profile.links.email}>
+              <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600">
+                <Mail className="w-4 h-4"/> Email me
+              </Button>
+            </a>
+            <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
+              <Button variant="secondary" className="gap-2">
+                <Linkedin className="w-4 h-4"/> LinkedIn
+              </Button>
+            </a>
+            <a href={profile.links.github} target="_blank" rel="noreferrer">
+              <Button variant="secondary" className="gap-2">
+                <Github className="w-4 h-4"/> GitHub
+              </Button>
+            </a>
           </div>
         </div>
       </Section>
