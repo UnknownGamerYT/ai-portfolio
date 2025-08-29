@@ -310,10 +310,10 @@ export default function Portfolio() {
   }, [projects]);
 
   const sorted = React.useMemo(() => {
-    const arr = [...projects];
-    arr.sort((a, b) => Number(!!b.icon && !!(b as any).featured) - Number(!!a.icon && !!(a as any).featured));
-    return arr;
-  }, []);
+  const arr = [...projects];
+  arr.sort((a: Project, b: Project) => Number(!!b.featured) - Number(!!a.featured));
+  return arr;
+  }, [projects]);
 
   const shown = React.useMemo(() => {
     if (selectedTags.size === 0) return sorted; // "All"
