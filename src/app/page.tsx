@@ -6,7 +6,7 @@ import { Github, Linkedin, Mail, FileDown, ExternalLink, GraduationCap, Cpu, Lay
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
+const cx = (...xs: Array<string | false | undefined>) => xs.filter(Boolean).join(" ");
 // ---------------- Types ----------------
 type LinkRef = { label: string; href: string };
 type Project = {
@@ -24,7 +24,7 @@ const profile = {
   headline: "MSc Artificial Intelligence",
   location: "Groningen (Netherlands) / Nicosia (Cyprus)",
   blurb:
-    "Master's student focused on tensor decompositions (CP/Tucker/TT) for CNN compression and deployment with NVIDIA TensorRT on embedded robotics (Jetson).",
+      "Master’s student working on tensor decompositions (CP/Tucker/TT/TR) for CNN compression + NVIDIA TensorRT on Jetson-class robotics. Thesis with UG & DFKI (supervisors: M.A. Valdenegro-Toro, Gunnar Schönhoff, Elie Mounzer).",
   links: {
     github: "https://github.com/UnknownGamerYT",
     linkedin: "https://www.linkedin.com/in/kyriakos-antoniou-a26b64230/",
@@ -71,7 +71,7 @@ const projects: Project[] = [
   },
 
   // ===== Vision / OCR =====
-  {
+    {
     title: "Dead Sea Scrolls & IAM Handwriting OCR",
     tags: ["OCR", "Hebrew", "ResNet", "Transformer", "cVAE", "GAN"],
     description:
@@ -248,16 +248,16 @@ const projects: Project[] = [
 const Section = ({ id, title, children }: { id: string; title: string; children: React.ReactNode }) => (
   <section id={id} className="scroll-mt-24 py-12 md:py-20">
     <div className="max-w-6xl mx-auto px-4">
-      <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-6">{title}</h2>
+      <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-6 text-slate-900 dark:text-slate-100">{title}</h2>
       {children}
     </div>
   </section>
 );
 
-const ProjectCard = ({ p }: { p: Project }) => (
-  <Card className="h-full">
+const ProjectCard = ({ p, isColorful = false }: { p: Project; isColorful?: boolean }) => (
+  <Card className="h-full bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
     <CardHeader className="pb-2">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
         {p.icon}
         <span>{p.tags.slice(0, 2).join(" • ")}</span>
       </div>
@@ -267,7 +267,16 @@ const ProjectCard = ({ p }: { p: Project }) => (
       <p className="mb-4 leading-relaxed">{p.description}</p>
       <div className="flex flex-wrap gap-2 mb-3">
         {p.tags.map((t) => (
-          <Badge key={t} variant="secondary">{t}</Badge>
+           <Badge
+             key={t}
+             variant="secondary"
+             className={cx(
+               "border-slate-200 dark:border-slate-700",
+               isColorful && "bg-gradient-to-r from-fuchsia-200 via-sky-200 to-emerald-200 text-slate-900 border-0 dark:from-fuchsia-800 dark:via-sky-800 dark:to-emerald-800 dark:text-slate-100"
+             )}
+          >
+            {t}
+           </Badge>
         ))}
       </div>
       <div className="flex flex-wrap gap-3">
@@ -277,7 +286,7 @@ const ProjectCard = ({ p }: { p: Project }) => (
             href={l.href}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-sm underline underline-offset-4"
+            className="inline-flex items-center gap-1 text-sm underline underline-offset-4 text-slate-700 dark:text-slate-200"
           >
             {l.label} <ExternalLink className="w-4 h-4" />
           </a>
@@ -289,11 +298,33 @@ const ProjectCard = ({ p }: { p: Project }) => (
 
 // ---------------- Page ----------------
 export default function Portfolio() {
+    // theming
+  
+  type Theme = "light" | "dark" | "colorful";
+  const pendingIndexRef = React.useRef<number | null>(null);
+  const HEADER_OFFSET = 80;
+  const [theme, setTheme] = React.useState<Theme>("light");
+  React.useEffect(() => {
+  const root = document.documentElement;
+  if (theme === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+  }, [theme]);
   const [showAllTags, setShowAllTags] = React.useState<boolean>(false);
   const [selectedTags, setSelectedTags] = React.useState<Set<string>>(new Set());
   // convenience flag
   const isAll = selectedTags.size === 0;
   const [visibleCount, setVisibleCount] = React.useState<number>(3);
+  React.useEffect(() => {
+    const idx = pendingIndexRef.current;
+    if (idx == null) return;
+
+    const el = document.querySelector<HTMLElement>(`[data-pindex="${idx}"]`);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+    pendingIndexRef.current = null;
+  }, [visibleCount]);
   // collect & rank tags by frequency (desc), then alphabetically
   const { topTags, restTags, allTags } = React.useMemo(() => {
     const counts = new Map<string, number>();
@@ -311,6 +342,7 @@ export default function Portfolio() {
 
   const sorted = React.useMemo(() => {
   const arr = [...projects];
+  
   arr.sort((a: Project, b: Project) => Number(!!b.featured) - Number(!!a.featured));
   return arr;
   }, [projects]);
@@ -324,9 +356,19 @@ export default function Portfolio() {
   const nextPreview = React.useMemo(() => shown.slice(visibleCount, visibleCount + 3), [shown, visibleCount]);
   const hasMore = shown.length > visibleCount;
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900">
+      <div
+         className={cx(
+           "min-h-screen",
+          // background by theme
+          theme === "colorful"
+            ? "bg-gradient-to-b from-fuchsia-100 via-sky-100 to-emerald-100 dark:from-fuchsia-950 dark:via-slate-900 dark:to-emerald-950"
+            : "bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900",
+          "text-slate-900 dark:text-slate-100"
+        )}
+      >
+
       {/* Nav */}
-      <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b">
+      <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70 border-b border-slate-200 dark:border-slate-800">
         <nav className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <a href="#home" className="font-semibold">KA</a>
           <div className="hidden md:flex items-center gap-6 text-sm">
@@ -337,6 +379,41 @@ export default function Portfolio() {
             <a href="#contact" className="hover:underline underline-offset-4">Contact</a>
             <a href="/ai-lab" className="hover:underline underline-offset-4">AI Lab</a>
           </div>
+          <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTheme("light")}
+            className={cx(
+              "px-2 py-1 rounded-md border text-xs",
+              theme === "light"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            )}
+          >
+            Light
+          </button>
+          <button
+            onClick={() => setTheme("dark")}
+            className={cx(
+              "px-2 py-1 rounded-md border text-xs",
+              theme === "dark"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            )}
+          >
+            Dark
+          </button>
+          <button
+            onClick={() => setTheme("colorful")}
+            className={cx(
+              "px-2 py-1 rounded-md border text-xs",
+              theme === "colorful"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            )}
+          >
+            Colorful
+          </button>
+        </div>
         </nav>
       </header>
 
@@ -347,11 +424,13 @@ export default function Portfolio() {
             <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-3xl md:text-5xl font-bold tracking-tight">
               {profile.name}
             </motion.h1>
-            <p className="mt-3 text-lg md:text-xl text-slate-700">{profile.headline}</p>
-            <p className="mt-4 text-slate-600 max-w-2xl leading-relaxed">{profile.blurb}</p>
+            <p className="mt-3 text-lg md:text-xl text-slate-700 dark:text-slate-200 font-medium">
+              {profile.headline}
+            </p>
+            <p className="mt-4 text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">{profile.blurb}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={profile.links.cv} target="_blank" rel="noreferrer">
-                <Button className="gap-2"><FileDown className="w-4 h-4" /> Download CV</Button>
+                <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"><FileDown className="w-4 h-4" /> Download CV</Button>
               </a>
               <a href={profile.links.github} target="_blank" rel="noreferrer">
                 <Button variant="secondary" className="gap-2"><Github className="w-4 h-4" /> GitHub</Button>
@@ -360,19 +439,19 @@ export default function Portfolio() {
                 <Button variant="secondary" className="gap-2"><Linkedin className="w-4 h-4" /> LinkedIn</Button>
               </a>
               <a href={profile.links.email}>
-                <Button variant="ghost" className="gap-2"><Mail className="w-4 h-4" /> Contact</Button>
+                <Button variant="secondary" className="gap-2"><Mail className="w-4 h-4" /> Contact</Button>
               </a>
             </div>
           </div>
           <div className="md:col-span-1">
-            <Card>
+            <Card className="bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Quick Facts</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
-                <p className="flex items-center gap-2"><GraduationCap className="w-4 h-4" /> MSc AI @ UG</p>
-                <p className="flex items-center gap-2"><Cpu className="w-4 h-4" /> TensorRT • Jetson</p>
-                <p className="flex items-center gap-2"><BookOpen className="w-4 h-4" /> Courses: {"Deep Learning, Reinforcement Learning, Robotics for AI"}…</p>
+                <p className="flex items-center gap-2"><GraduationCap className="w-4 h-4" /> MSc AI @ University of Groningen</p>
+                <p className="flex items-center gap-2"><Cpu className="w-4 h-4" /> Tensor Decomposition + TensorRT • Jetson</p>
+                <p className="flex items-center gap-2"><BookOpen className="w-4 h-4" /> 16 linked course/project reports</p>
                 <p className="text-slate-600">Open to collaborations & research internships.</p>
               </CardContent>
             </Card>
@@ -413,9 +492,15 @@ export default function Portfolio() {
                       setVisibleCount(3);
                     }}
                     aria-pressed={active}
-                    className={`px-3 py-1 rounded-full border text-sm ${
-                      active ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-100"
-                    }`}
+                    className={cx(
+                      "px-3 py-1 rounded-full border text-sm",
+                      active
+                        ? cx(
+                            "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900",
+                            theme === "colorful" && "bg-gradient-to-r from-fuchsia-500 to-emerald-500 text-white border-0"
+                          )
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
+                    )}
                   >
                     {t}
                   </button>
@@ -427,10 +512,22 @@ export default function Portfolio() {
             {restTags.length > 0 && (
               <button
                 onClick={() => setShowAllTags((v) => !v)}
-                className="ml-1 px-3 py-1 rounded-full border text-sm bg-white hover:bg-slate-100 inline-flex items-center gap-1"
+                className={cx(
+                  "ml-1 px-3 py-1 rounded-full border text-sm inline-flex items-center gap-1",
+                  // default look (visible in light & dark)
+                  "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200",
+                  "dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700",
+                  // subtle accent in colorful theme
+                  theme === "colorful" &&
+                    "bg-gradient-to-r from-fuchsia-100 to-emerald-100 text-slate-800 border-0 dark:from-fuchsia-900 dark:to-emerald-900 dark:text-slate-100"
+                )}
                 aria-expanded={showAllTags}
               >
-                {showAllTags ? <>Fewer filters <ChevronUp className="w-4 h-4" /></> : <>More filters <ChevronDown className="w-4 h-4" /></>}
+                {showAllTags ? (
+                  <>Fewer filters <ChevronUp className="w-4 h-4" /></>
+                ) : (
+                  <>More filters <ChevronDown className="w-4 h-4" /></>
+                )}
               </button>
             )}
           </div>
@@ -444,24 +541,39 @@ export default function Portfolio() {
         {/* Grid + Ghosted preview */}
         <div className="relative">
           {/* Visible cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {shownNow.map((p) => (
-              <ProjectCard key={p.title} p={p} />
+          <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {shownNow.map((p, i) => (
+              <motion.div
+                key={p.title}
+                data-pindex={i}
+                className="scroll-mt-24" // accounts for sticky header (~96px)
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 36, delay: Math.min(i * 0.03, 0.18) }}
+              >
+                <ProjectCard p={p} isColorful={theme === "colorful"} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Ghosted preview row (~3/4 height) */}
           {hasMore && (
-            <div
+            <motion.div
+              layout
               role="button"
               aria-label="Show more projects"
               onClick={() => setVisibleCount((c) => Math.min(c + 6, shown.length))}
               className="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-5 cursor-pointer select-none"
             >
-              {nextPreview.map((p) => (
-                <div
+              {nextPreview.map((p, i) => (
+                <motion.div
                   key={p.title}
-                  className="relative border rounded-xl overflow-hidden bg-white"
+                  layout
+                  initial={{ opacity: 0.4, y: 10 }}
+                  animate={{ opacity: 0.6, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 36, delay: i * 0.03 }}
+                  className="relative border rounded-xl overflow-hidden bg-white dark:bg-slate-800"
                 >
                   {/* mimic card height ~3/4 with blur */}
                   <div className="p-4 h-48 md:h-56 opacity-60 blur-[1px]">
@@ -471,7 +583,10 @@ export default function Portfolio() {
                     </div>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {p.tags.slice(0, 3).map((t) => (
-                        <span key={t} className="px-2 py-0.5 text-xs rounded-full border bg-white/60">
+                        <span
+                          key={t}
+                          className="px-2 py-0.5 text-xs rounded-full border bg-white/60 dark:bg-slate-700/60"
+                        >
                           {t}
                         </span>
                       ))}
@@ -479,41 +594,80 @@ export default function Portfolio() {
                     <p className="text-sm line-clamp-3">{p.description}</p>
                   </div>
                   {/* subtle gradient to suggest more content */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
-                </div>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent dark:from-slate-900" />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
 
           {/* Pagination controls */}
           <div className="flex justify-center gap-3 mt-4">
             {hasMore ? (
               <>
+                {/* Show more (+6) */}
                 <button
-                  onClick={() => setVisibleCount((c) => Math.min(c + 6, shown.length))}
-                  aria-expanded={true}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white hover:bg-slate-100"
+                  onClick={() =>
+                    setVisibleCount((c) => {
+                      pendingIndexRef.current = c; // first new index
+                      return Math.min(c + 6, shown.length);
+                    })
+                  }
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
+                            bg-slate-100 hover:bg-slate-200 
+                            dark:bg-slate-700 dark:hover:bg-slate-600 
+                            border-slate-300 dark:border-slate-600"
                 >
                   <ChevronDown className="w-4 h-4" /> Show more
                 </button>
+
+                {/* Show 6 less (only if more than 3 are visible) */}
+                {visibleCount > 3 && (
+                  <button
+                    onClick={() =>
+                      setVisibleCount((c) => {
+                        const next = Math.max(3, c - 6);
+                        pendingIndexRef.current = next - 1; // new last index
+                        return next;
+                      })
+                    }
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
+                              bg-slate-100 hover:bg-slate-200 
+                              dark:bg-slate-700 dark:hover:bg-slate-600 
+                              border-slate-300 dark:border-slate-600"
+                  >
+                    <ChevronUp className="w-4 h-4" /> Show less
+                  </button>
+                )}
+
+                {/* Show all */}
                 <button
-                  onClick={() => setVisibleCount(shown.length)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white hover:bg-slate-100"
+                  onClick={() => {
+                    if (shown.length - visibleCount <= 6) {
+                      pendingIndexRef.current = visibleCount; // behave like "Show more" for the last chunk
+                    }
+                    setVisibleCount(shown.length);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
+                            bg-slate-100 hover:bg-slate-200 
+                            dark:bg-slate-700 dark:hover:bg-slate-600 
+                            border-slate-300 dark:border-slate-600"
                 >
                   Show all
                 </button>
               </>
             ) : shown.length > 3 ? (
+              // Collapse back to 3 (scroll all the way up)
               <button
                 onClick={() => {
-                  window.scrollTo({
-                    top: (document.getElementById('projects')?.offsetTop || 0) - 80,
-                    behavior: 'smooth'
-                  });
+                  document
+                    .getElementById("projects")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   setVisibleCount(3);
                 }}
-                aria-expanded={false}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white hover:bg-slate-100"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
+                          bg-slate-100 hover:bg-slate-200 
+                          dark:bg-slate-700 dark:hover:bg-slate-600 
+                          border-slate-300 dark:border-slate-600"
               >
                 <ChevronUp className="w-4 h-4" /> Show less
               </button>
@@ -620,7 +774,7 @@ export default function Portfolio() {
       </Section>
 
       {/* Footer */}
-      <footer className="border-t">
+      <footer className="border-t border-slate-200 dark:border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-muted-foreground flex flex-col md:flex-row items-center justify-between gap-3">
           <p>© {new Date().getFullYear()} {profile.name}. All rights reserved.</p>
           <div className="flex items-center gap-4">
