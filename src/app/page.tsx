@@ -428,7 +428,18 @@ export default function Portfolio() {
             <p className="mt-4 text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">{profile.blurb}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={profile.links.cv} target="_blank" rel="noreferrer">
-                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}>
+                <Button
+                  variant={theme === "colorful" ? undefined : "secondary"} // keep secondary for light/dark
+                  className={cx(
+                    "gap-2 font-semibold rounded-md",
+                    theme === "colorful" &&
+                      "bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white",
+                    // border per theme
+                    theme === "dark" && "border-2 border-white",
+                    theme === "light" && "border-2 border-black",
+                    theme === "colorful" && "border-2 border-white"
+                  )}
+                >
                   <FileDown className="w-4 h-4" /> Download CV
                 </Button>
               </a>
