@@ -324,7 +324,7 @@ export default function Portfolio() {
   type Theme = "light" | "dark" | "colorful";
   const pendingIndexRef = React.useRef<number | null>(null);
   const HEADER_OFFSET = 80;
-
+  const raf2Ref = React.useRef<number | null>(null);
   const [showAllTags, setShowAllTags] = React.useState<boolean>(false);
   const [selectedTags, setSelectedTags] = React.useState<Set<string>>(new Set());
   // convenience flag
@@ -375,7 +375,7 @@ export default function Portfolio() {
   React.useLayoutEffect(() => {
     // place the rail at the correct position on first render
     syncRailToLast();
-  }, []);
+  }, [syncRailToLast]);
 
   const [theme, setTheme] = React.useState<Theme>("dark");
 
@@ -400,10 +400,9 @@ export default function Portfolio() {
     // Try after layout, then again once the smooth scroll settles
     // (double rAF = next paint; debounced scroll = after motion)
     const raf1 = requestAnimationFrame(() => {
-      const raf2 = requestAnimationFrame(() => {
+      raf2Ref.current = requestAnimationFrame(() => {
         syncRailToLast();
       });
-      (window as any).__raf2 = raf2;
     });
 
     let debounce: number | undefined;
@@ -417,9 +416,12 @@ export default function Portfolio() {
 
     pendingIndexRef.current = null;
 
+
     return () => {
       cancelAnimationFrame(raf1);
-      if ((window as any).__raf2) cancelAnimationFrame((window as any).__raf2);
+      if (raf2Ref.current != null) cancelAnimationFrame(raf2Ref.current);
+      raf2Ref.current = null;
+
       window.removeEventListener("scroll", onScroll);
       if (debounce) window.clearTimeout(debounce);
       window.clearTimeout(fallback);
