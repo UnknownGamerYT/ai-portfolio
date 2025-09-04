@@ -1,12 +1,25 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
-import { Github, Linkedin, Mail, FileDown, ExternalLink, GraduationCap, Cpu, Layers, Timer, BookOpen, Rocket, ChevronDown, ChevronUp, ShieldCheck, BarChart3, Gamepad, Network, Sun, Moon, Palette } from "lucide-react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
+import { Github, Linkedin, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, Mail, FileDown, ExternalLink, GraduationCap, Cpu, Layers, Timer, BookOpen, Rocket, ShieldCheck, BarChart3, Gamepad, Network, Sun, Moon, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
+// === Color helpers ===
+const GRAD_SOFT = "bg-gradient-to-r from-fuchsia-100 via-sky-100 to-emerald-100 dark:from-fuchsia-900/40 dark:via-sky-900/40 dark:to-emerald-900/40";
+const GRAD_VIVID = "bg-gradient-to-r from-fuchsia-500 via-sky-400 to-emerald-500";
+const GRAD_MID = "bg-gradient-to-r from-fuchsia-300 via-sky-300 to-emerald-300 dark:from-fuchsia-800/70 dark:via-sky-800/70 dark:to-emerald-800/70";
+const TXT_ON_SOFT = "text-slate-900 dark:text-slate-100";
+
+// NEW: exact palettes you asked to mirror
+const QUICK_CARD = "bg-gradient-to-r from-fuchsia-400/80 via-sky-400/80 to-emerald-400/80"; // matches Quick Facts card
+const HERO_BTN = "bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white"; // matches GitHub/LinkedIn/Contact (hero)
+const AURORA_SOFT = "bg-gradient-to-r from-fuchsia-200/70 via-sky-200/70 to-emerald-200/70 dark:from-fuchsia-900/50 dark:via-sky-900/50 dark:to-emerald-900/50"; // unselected filters
+
 const cx = (...xs: Array<string | false | undefined>) => xs.filter(Boolean).join(" ");
+
 // ---------------- Types ----------------
 type LinkRef = { label: string; href: string };
 type Project = {
@@ -24,7 +37,7 @@ const profile = {
   headline: "MSc Artificial Intelligence",
   location: "Groningen (Netherlands) / Nicosia (Cyprus)",
   blurb:
-      "Master’s student working on tensor decompositions (CP/Tucker/TT/TR) for CNN compression + NVIDIA TensorRT on Jetson-class robotics. Thesis with UG & DFKI (supervisors: M.A. Valdenegro-Toro, Gunnar Schönhoff, Elie Mounzer).",
+    "Master’s student working on tensor decompositions (CP/Tucker/TT/TR) for CNN compression + NVIDIA TensorRT on Jetson-class robotics. Thesis with UG & DFKI (supervisors: M.A. Valdenegro-Toro, Gunnar Schönhoff, Elie Mounzer).",
   links: {
     github: "https://github.com/UnknownGamerYT",
     linkedin: "https://www.linkedin.com/in/kyriakos-antoniou-a26b64230/",
@@ -71,7 +84,7 @@ const projects: Project[] = [
   },
 
   // ===== Vision / OCR =====
-    {
+  {
     title: "Dead Sea Scrolls & IAM Handwriting OCR",
     tags: ["OCR", "Hebrew", "ResNet", "Transformer", "cVAE", "GAN"],
     description:
@@ -252,29 +265,37 @@ const Section = ({ id, title, children }: { id: string; title: string; children:
   </section>
 );
 
+// ✅ UPDATED: project cards use Quick Facts palette; badges use hero palette
 const ProjectCard = ({ p, isColorful = false }: { p: Project; isColorful?: boolean }) => (
-  <Card className="h-full bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
+  <Card
+    className={cx(
+      "h-full border",
+      isColorful
+        ? cx(QUICK_CARD, "border-0 shadow-sm", TXT_ON_SOFT)
+        : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+    )}
+  >
     <CardHeader className="pb-2">
-      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <div className={cx("flex items-center gap-2 text-sm", isColorful ? "text-slate-700 dark:text-slate-200" : "text-slate-500 dark:text-slate-400")}>
         {p.icon}
         <span>{p.tags.slice(0, 2).join(" • ")}</span>
       </div>
-      <CardTitle className="text-lg mt-1">{p.title}</CardTitle>
+      <CardTitle className={cx("text-lg mt-1", isColorful && TXT_ON_SOFT)}>{p.title}</CardTitle>
     </CardHeader>
-    <CardContent className="text-sm">
+    <CardContent className={cx("text-sm", isColorful && TXT_ON_SOFT)}>
       <p className="mb-4 leading-relaxed">{p.description}</p>
       <div className="flex flex-wrap gap-2 mb-3">
         {p.tags.map((t) => (
-           <Badge
-             key={t}
-             variant="secondary"
-             className={cx(
-               "border-slate-200 dark:border-slate-700",
-               isColorful && "bg-gradient-to-r from-fuchsia-200 via-sky-200 to-emerald-200 text-slate-900 border-0 dark:from-fuchsia-800 dark:via-sky-800 dark:to-emerald-800 dark:text-slate-100"
-             )}
+          <Badge
+            key={t}
+            variant="secondary"
+            className={cx(
+              // Colorful: same look as hero GitHub/LinkedIn/Contact buttons
+              isColorful ? cx(HERO_BTN, "border-0") : "border-slate-200 dark:border-slate-700"
+            )}
           >
             {t}
-           </Badge>
+          </Badge>
         ))}
       </div>
       <div className="flex flex-wrap gap-3">
@@ -284,7 +305,10 @@ const ProjectCard = ({ p, isColorful = false }: { p: Project; isColorful?: boole
             href={l.href}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-sm underline underline-offset-4 text-slate-700 dark:text-slate-200"
+            className={cx(
+              "inline-flex items-center gap-1 text-sm underline underline-offset-4",
+              isColorful ? "text-slate-800 dark:text-slate-100" : "text-slate-700 dark:text-slate-200"
+            )}
           >
             {l.label} <ExternalLink className="w-4 h-4" />
           </a>
@@ -296,33 +320,17 @@ const ProjectCard = ({ p, isColorful = false }: { p: Project; isColorful?: boole
 
 // ---------------- Page ----------------
 export default function Portfolio() {
-    // theming
-  
+  // theming
   type Theme = "light" | "dark" | "colorful";
   const pendingIndexRef = React.useRef<number | null>(null);
   const HEADER_OFFSET = 80;
-  const [theme, setTheme] = React.useState<Theme>("light");
-  React.useEffect(() => {
-  const root = document.documentElement;
-  if (theme === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
-  }, [theme]);
+
   const [showAllTags, setShowAllTags] = React.useState<boolean>(false);
   const [selectedTags, setSelectedTags] = React.useState<Set<string>>(new Set());
   // convenience flag
   const isAll = selectedTags.size === 0;
   const [visibleCount, setVisibleCount] = React.useState<number>(3);
-  React.useEffect(() => {
-    const idx = pendingIndexRef.current;
-    if (idx == null) return;
 
-    const el = document.querySelector<HTMLElement>(`[data-pindex="${idx}"]`);
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-      window.scrollTo({ top, behavior: "smooth" });
-    }
-    pendingIndexRef.current = null;
-  }, [visibleCount]);
   // collect & rank tags by frequency (desc), then alphabetically
   const { topTags, restTags, allTags } = React.useMemo(() => {
     const counts = new Map<string, number>();
@@ -339,10 +347,9 @@ export default function Portfolio() {
   }, [projects]);
 
   const sorted = React.useMemo(() => {
-  const arr = [...projects];
-  
-  arr.sort((a: Project, b: Project) => Number(!!b.featured) - Number(!!a.featured));
-  return arr;
+    const arr = [...projects];
+    arr.sort((a: Project, b: Project) => Number(!!b.featured) - Number(!!a.featured));
+    return arr;
   }, [projects]);
 
   const shown = React.useMemo(() => {
@@ -353,87 +360,311 @@ export default function Portfolio() {
   const shownNow = React.useMemo(() => shown.slice(0, visibleCount), [shown, visibleCount]);
   const nextPreview = React.useMemo(() => shown.slice(visibleCount, visibleCount + 3), [shown, visibleCount]);
   const hasMore = shown.length > visibleCount;
-  return (
-      <div
-         className={cx(
-           "min-h-screen",
-          // background by theme
+  const [railY, setRailY] = React.useState(0);
+
+  const syncRailToLast = React.useCallback(() => {
+    const lastIdx = Math.max(0, Math.min(visibleCount - 1, shown.length - 1));
+    const lastEl = document.querySelector<HTMLElement>(`[data-pindex="${lastIdx}"]`);
+    const railAnchor = document.getElementById("rail-anchor");
+    if (!lastEl || !railAnchor) return;
+
+    const desired = lastEl.getBoundingClientRect().top - railAnchor.getBoundingClientRect().top;
+    setRailY(Math.max(0, Math.round(desired)));
+  }, [visibleCount, shown.length]);
+
+  React.useLayoutEffect(() => {
+    // place the rail at the correct position on first render
+    syncRailToLast();
+  }, []);
+
+  const [theme, setTheme] = React.useState<Theme>("dark");
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+  }, [theme]);
+
+  React.useEffect(() => {
+    const topIdx = pendingIndexRef.current;
+
+    // Scroll PAGE to the first newly visible card (as before)
+    if (topIdx != null) {
+      const topEl = document.querySelector<HTMLElement>(`[data-pindex="${topIdx}"]`);
+      if (topEl) {
+        const top = topEl.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+    }
+
+    // Try after layout, then again once the smooth scroll settles
+    // (double rAF = next paint; debounced scroll = after motion)
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        syncRailToLast();
+      });
+      (window as any).__raf2 = raf2;
+    });
+
+    let debounce: number | undefined;
+    const onScroll = () => {
+      if (debounce) window.clearTimeout(debounce);
+      debounce = window.setTimeout(syncRailToLast, 120);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const fallback = window.setTimeout(syncRailToLast, 450);
+
+    pendingIndexRef.current = null;
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      if ((window as any).__raf2) cancelAnimationFrame((window as any).__raf2);
+      window.removeEventListener("scroll", onScroll);
+      if (debounce) window.clearTimeout(debounce);
+      window.clearTimeout(fallback);
+    };
+  }, [visibleCount, syncRailToLast]);
+
+  // --- Right-side arrow rail (matches filter buttons) ---
+  const ArrowRail: React.FC<{ className?: string }> = ({ className = "" }) => {
+    const canStepUpOne = visibleCount > 3;
+    const canStepUpAll = visibleCount > 3;
+    const canStepDownOne = shown.length > visibleCount;
+    const canStepDownAll = shown.length > visibleCount;
+
+    const baseBtn =
+      "w-10 h-10 rounded-full inline-flex items-center justify-center transition " +
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 active:scale-[.98]";
+
+    const btnCx = (enabled: boolean) =>
+      cx(
+        baseBtn,
+        theme === "colorful"
+          ? cx(HERO_BTN, "border-0") // same as selected filter chip
+          : "bg-slate-100 hover:bg-slate-200 border border-slate-300 " +
+            "dark:bg-slate-700 dark:hover:bg-slate-600 dark:border-slate-600",
+        !enabled && "pointer-events-none"
+      );
+
+    return (
+      <motion.div
+        layout
+        className={cx(
+          "flex flex-col items-center gap-2 p-1 rounded-xl backdrop-blur",
           theme === "colorful"
-            ? "bg-gradient-to-b from-fuchsia-300 via-sky-300 to-emerald-400"
-            : "bg-white dark:bg-slate-950",
-          "text-slate-900 dark:text-slate-100"
+            ? cx(AURORA_SOFT, "border-0 shadow-sm", TXT_ON_SOFT) // same as unselected filter chip
+            : "bg-white/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-sm",
+          className
+        )}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+      >
+        {/* Go ALL the way up (collapse to 3) */}
+        <button
+          aria-label="Show first 3"
+          className={btnCx(canStepUpAll)}
+          onClick={() => {
+            document.getElementById("projects")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            setVisibleCount(3);
+            pendingIndexRef.current = 0;
+          }}
+          disabled={!canStepUpAll}
+        >
+          <ChevronsUp className="w-5 h-5 text-black dark:text-black" />
+        </button>
+
+        {/* Step UP (show 6 fewer) */}
+        <button
+          aria-label="Show 6 fewer"
+          className={btnCx(canStepUpOne)}
+          onClick={() => {
+            setVisibleCount((c) => {
+              const next = Math.max(3, c - 6);
+              pendingIndexRef.current = Math.max(0, next - 6);
+              return next;
+            });
+          }}
+          disabled={!canStepUpOne}
+        >
+          <ChevronUp className="w-5 h-5 text-black dark:text-black" />
+        </button>
+
+        {/* Step DOWN (show 6 more) */}
+        <button
+          aria-label="Show 6 more"
+          className={btnCx(canStepDownOne)}
+          onClick={() => {
+            setVisibleCount((c) => {
+              pendingIndexRef.current = c;
+              return Math.min(c + 6, shown.length);
+            });
+          }}
+          disabled={!canStepDownOne}
+        >
+          <ChevronDown className="w-5 h-5 text-black dark:text-black" />
+        </button>
+
+        {/* Go ALL the way down (show all) */}
+        <button
+          aria-label="Show all"
+          className={btnCx(canStepDownAll)}
+          onClick={() => {
+            if (shown.length - visibleCount <= 6) {
+              pendingIndexRef.current = visibleCount;
+            }
+            setVisibleCount(shown.length);
+          }}
+          disabled={!canStepDownAll}
+        >
+          <ChevronsDown className="w-5 h-5 text-black dark:text-black" />
+        </button>
+      </motion.div>
+    );
+  };
+
+
+  const ThemeToggle: React.FC<{
+    theme: "light" | "dark" | "colorful";
+    setTheme: (t: "light" | "dark" | "colorful") => void;
+  }> = ({ theme, setTheme }) => {
+    const base =
+      "px-3 h-9 inline-flex items-center gap-2 rounded-md text-sm transition-colors " +
+      "focus:outline-none focus:ring-0 ring-0 outline-none border";
+
+    const inactive =
+      "bg-transparent !border-transparent text-slate-700 dark:text-slate-200 " +
+      "hover:bg-white/10 dark:hover:bg-white/10";
+
+    const activeLight =
+      "bg-white !text-orange-500 !border-orange-400 shadow-sm ring-2 ring-orange-400/45";
+    const activeDark =
+      "bg-slate-800 !text-blue-400 !border-blue-400/60 shadow-sm ring-2 ring-blue-400/45";
+    const activeColorful =
+      "bg-transparent !text-fuchsia-700 dark:!text-fuchsia-300 !border-fuchsia-300 shadow-md ring-2 ring-fuchsia-300/60";
+
+    const itemCx = (t: "light" | "dark" | "colorful") =>
+      cx(
+        base,
+        inactive,
+        t === "light" && theme === "light" && activeLight,
+        t === "dark" && theme === "dark" && activeDark,
+        t === "colorful" && theme === "colorful" && activeColorful
+      );
+
+    return (
+      <div role="group" aria-label="Theme" className="inline-flex items-center gap-1 p-1 rounded-lg bg-transparent">
+        <button
+          type="button"
+          aria-pressed={theme === "light"}
+          title="Light"
+          className={itemCx("light")}
+          onClick={() => theme !== "light" && setTheme("light")}
+        >
+          <Sun className="w-4 h-4" />
+          <span className="hidden sm:inline">Light</span>
+        </button>
+
+        <button
+          type="button"
+          aria-pressed={theme === "dark"}
+          title="Dark"
+          className={itemCx("dark")}
+          onClick={() => theme !== "dark" && setTheme("dark")}
+        >
+          <Moon className="w-4 h-4" />
+          <span className="hidden sm:inline">Dark</span>
+        </button>
+
+        <button
+          type="button"
+          aria-pressed={theme === "colorful"}
+          title="Colorful"
+          className={itemCx("colorful")}
+          onClick={() => theme !== "colorful" && setTheme("colorful")}
+        >
+          <Palette className="w-4 h-4" />
+          <span className="hidden sm:inline">Colorful</span>
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className={cx(
+        "min-h-screen",
+        theme === "colorful"
+          ? "bg-gradient-to-b from-fuchsia-300 via-sky-300 to-emerald-400"
+          : "bg-white dark:bg-slate-950",
+        "text-slate-900 dark:text-slate-100"
+      )}
+    >
+      {/* Nav */}
+      <header
+        className={cx(
+          "sticky top-0 z-50 backdrop-blur border-b",
+          theme === "colorful"
+            ? "supports-[backdrop-filter]:bg-gradient-to-r from-fuchsia-200/70 via-sky-200/70 to-emerald-200/70 dark:from-fuchsia-900/70 dark:via-sky-900/70 dark:to-emerald-900/70 border-transparent"
+            : "supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70 border-slate-200 dark:border-slate-800"
         )}
       >
-
-      {/* Nav */}
-      <header className={cx("sticky top-0 z-50 backdrop-blur border-b", theme === "colorful"
-        ? "supports-[backdrop-filter]:bg-gradient-to-r from-fuchsia-200/70 via-sky-200/70 to-emerald-200/70 dark:from-fuchsia-900/70 dark:via-sky-900/70 dark:to-emerald-900/70 border-transparent"
-        : "supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70 border-slate-200 dark:border-slate-800")}>
         <nav className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <a href="#home" className="font-semibold">KA</a>
+          <a href="#home" className="font-semibold">
+            KA
+          </a>
           <div className="hidden md:flex items-center gap-6 text-sm">
-            <a href="#projects" className="hover:underline underline-offset-4">Projects</a>
-            <a href="#skills" className="hover:underline underline-offset-4">Skills</a>
-            <a href="#education" className="hover:underline underline-offset-4">Education</a>
-            <a href="#publications" className="hover:underline underline-offset-4">Publications</a>
-            <a href="#contact" className="hover:underline underline-offset-4">Contact</a>
-            <a href="/ai-lab" className="hover:underline underline-offset-4">AI Lab</a>
+            <a href="#projects" className="hover:underline underline-offset-4">
+              Projects
+            </a>
+            <a href="#skills" className="hover:underline underline-offset-4">
+              Skills
+            </a>
+            <a href="#education" className="hover:underline underline-offset-4">
+              Education
+            </a>
+            <a href="#publications" className="hover:underline underline-offset-4">
+              Publications
+            </a>
+            <a href="#contact" className="hover:underline underline-offset-4">
+              Contact
+            </a>
+            <a href="/ai-lab" className="hover:underline underline-offset-4">
+              AI Lab
+            </a>
           </div>
           <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            <button
-              onClick={() => {
-                if (theme === "light") setTheme("dark");
-                else if (theme === "dark") setTheme("colorful");
-                else setTheme("light");
-              }}
-              className={cx(
-                  // base
-                  "p-2 rounded-md text-xs transition-colors",
-
-                  // light/dark keep a border
-                  theme === "light" && "border-0 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-yellow-500",
-                  theme === "dark" && "border-0 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-blue-400",
-
-                  // colorful: full gradient, NO border
-                  theme === "colorful" &&
-                    "border-0 text-fuchsia-600 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 " +
-                    "hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500",
-                    // kill borders/rings/outlines + avoid subpixel seam
-                    "shadow-none focus:outline-none focus:ring-0 ring-0 ring-offset-0 outline-none",
-                    "overflow-hidden [background-clip:padding-box] transform-gpu"
-                )}
-              >
-                {theme === "light" && <Sun className="w-5 h-5" />}
-                {theme === "dark" && <Moon className="w-5 h-5" />}
-
-                {/* Colorful: icon directly on the gradient button (no inner white wrapper) */}
-                {theme === "colorful" && <Palette className="w-5 h-5" />}
-            </button>
+            <ThemeToggle theme={theme} setTheme={setTheme} />
           </div>
-        </div>
         </nav>
-      </header> 
+      </header>
 
       {/* Hero */}
       <section id="home" className="pt-16 md:pt-24 pb-10">
         <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 items-center">
           <div className="md:col-span-2">
-            <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-3xl md:text-5xl font-bold tracking-tight">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl md:text-5xl font-bold tracking-tight"
+            >
               {profile.name}
             </motion.h1>
             <p className="mt-3 text-lg md:text-xl text-slate-700 dark:text-slate-200 font-medium">
               {profile.headline}
             </p>
-            <p className="mt-4 text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">{profile.blurb}</p>
+            <p className="mt-4 text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
+              {profile.blurb}
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={profile.links.cv} target="_blank" rel="noreferrer">
                 <Button
                   variant={theme === "colorful" ? undefined : "secondary"} // keep secondary for light/dark
                   className={cx(
                     "gap-2 font-semibold rounded-md",
-                    theme === "colorful" &&
-                      "bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white",
+                    theme === "colorful" && HERO_BTN,
                     // border per theme
                     theme === "dark" && "border-2 border-white",
                     theme === "light" && "border-2 border-black",
@@ -444,28 +675,53 @@ export default function Portfolio() {
                 </Button>
               </a>
               <a href={profile.links.github} target="_blank" rel="noreferrer">
-                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}><Github className="w-4 h-4" /> GitHub</Button>
+                <Button
+                  variant="secondary"
+                  className={cx("gap-2", theme === "colorful" && cx(HERO_BTN, "font-semibold rounded-md"))}
+                >
+                  <Github className="w-4 h-4" /> GitHub
+                </Button>
               </a>
               <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
-                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}><Linkedin className="w-4 h-4" /> LinkedIn</Button>
+                <Button
+                  variant="secondary"
+                  className={cx("gap-2", theme === "colorful" && cx(HERO_BTN, "font-semibold rounded-md"))}
+                >
+                  <Linkedin className="w-4 h-4" /> LinkedIn
+                </Button>
               </a>
               <a href={profile.links.email}>
-                <Button variant="secondary" className={cx("gap-2", theme === "colorful" && "gap-2 bg-gradient-to-r from-fuchsia-400 via-sky-300 to-emerald-400 hover:from-fuchsia-500 hover:via-sky-400 hover:to-emerald-500 text-white font-semibold rounded-md")}><Mail className="w-4 h-4" /> Contact</Button>
+                <Button
+                  variant="secondary"
+                  className={cx("gap-2", theme === "colorful" && cx(HERO_BTN, "font-semibold rounded-md"))}
+                >
+                  <Mail className="w-4 h-4" /> Contact
+                </Button>
               </a>
             </div>
           </div>
           <div className="md:col-span-1">
-            <Card className={cx("border",theme === "colorful"
-              ? "bg-gradient-to-r from-fuchsia-400/80 via-sky-400/80 to-emerald-400/80 border-0 text-slate-900"
-              : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
-            )}>
+            <Card
+              className={cx(
+                "border",
+                theme === "colorful"
+                  ? "bg-gradient-to-r from-fuchsia-400/80 via-sky-400/80 to-emerald-400/80 border-0 text-slate-900"
+                  : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              )}
+            >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Quick Facts</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
-                <p className="flex items-center gap-2"><GraduationCap className="w-4 h-4" /> MSc AI @ University of Groningen</p>
-                <p className="flex items-center gap-2"><Cpu className="w-4 h-4" /> Tensor Decomposition + TensorRT • Jetson</p>
-                <p className="flex items-center gap-2"><BookOpen className="w-4 h-4" /> 16 linked course/project reports</p>
+                <p className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4" /> MSc AI @ University of Groningen
+                </p>
+                <p className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4" /> Tensor Decomposition + TensorRT • Jetson
+                </p>
+                <p className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" /> 16 linked course/project reports
+                </p>
                 <p className="text-slate-600">Open to collaborations & research internships.</p>
               </CardContent>
             </Card>
@@ -479,12 +735,8 @@ export default function Portfolio() {
         <div className="mb-5">
           <div className="flex flex-wrap gap-2 items-center">
             {(() => {
-              // First row is fixed: "All" + top tags (frequency-ranked)
               const firstRow = [...topTags];
-
-              // When expanded, append the rest (in their original order)
               const restInline = showAllTags ? restTags : [];
-
               const combined = [...firstRow, ...restInline];
 
               return combined.map((t) => {
@@ -494,12 +746,12 @@ export default function Portfolio() {
                     key={t}
                     onClick={() => {
                       if (t === "All") {
-                        setSelectedTags(new Set());          // clear all
+                        setSelectedTags(new Set());
                       } else {
                         setSelectedTags((prev) => {
                           const next = new Set(prev);
-                          if (next.has(t)) next.delete(t);    // toggle off
-                          else next.add(t);                    // toggle on
+                          if (next.has(t)) next.delete(t);
+                          else next.add(t);
                           return next;
                         });
                       }
@@ -507,13 +759,16 @@ export default function Portfolio() {
                     }}
                     aria-pressed={active}
                     className={cx(
-                      "px-3 py-1 rounded-full border text-sm",
-                      active
-                        ? cx(
-                            "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900",
-                            theme === "colorful" && "bg-gradient-to-r from-fuchsia-500 to-emerald-500 text-white border-0"
-                          )
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
+                      "px-3 py-1 rounded-full border text-sm transition-colors",
+                      // Light/Dark (unchanged)
+                      theme !== "colorful"
+                        ? active
+                          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
+                        : // Colorful: selected = HERO palette, unselected = AURORA
+                          active
+                          ? cx(HERO_BTN, "border-0 shadow-sm")
+                          : cx(AURORA_SOFT, "border-0 hover:brightness-105", TXT_ON_SOFT)
                     )}
                   >
                     {t}
@@ -527,12 +782,10 @@ export default function Portfolio() {
               <button
                 onClick={() => setShowAllTags((v) => !v)}
                 className={cx(
-                  "ml-1 px-3 py-1 rounded-full border text-sm inline-flex items-center gap-1",
-                  // default look (visible in light & dark)
-                  "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200",
-                  "dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700",
-                  // subtle accent in colorful theme
-                  theme === "colorful" && "bg-gradient-to-r from-fuchsia-100 to-emerald-100 text-slate-800 border-0 dark:from-fuchsia-900 dark:to-emerald-900 dark:text-slate-100"
+                  "ml-1 px-3 py-1 rounded-full border text-sm inline-flex items-center gap-1 transition-colors",
+                  theme === "colorful"
+                    ? cx(AURORA_SOFT, "border-0 hover:brightness-105", TXT_ON_SOFT)
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
                 )}
                 aria-expanded={showAllTags}
               >
@@ -548,145 +801,152 @@ export default function Portfolio() {
 
         {/* Featured notice */}
         {isAll && (
-          <p className="mb-3 text-sm text-muted-foreground">Featured projects appear first.</p>
+          <p
+            className={cx(
+              "mb-3 text-sm text-muted-foreground",
+              theme === "colorful" && "text-slate-700 dark:text-slate-200"
+            )}
+          >
+            Featured projects appear first.
+          </p>
         )}
 
         {/* Grid + Ghosted preview */}
-        <div className="relative">
-          {/* Visible cards */}
-          <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {shownNow.map((p, i) => (
-              <motion.div
-                key={p.title}
-                data-pindex={i}
-                className="scroll-mt-24" // accounts for sticky header (~96px)
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 36, delay: Math.min(i * 0.03, 0.18) }}
-              >
-                <ProjectCard p={p} isColorful={theme === "colorful"} />
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Ghosted preview row (~3/4 height) */}
-          {hasMore && (
-            <motion.div
-              layout
-              role="button"
-              aria-label="Show more projects"
-              onClick={() => setVisibleCount((c) => Math.min(c + 6, shown.length))}
-              className="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-5 cursor-pointer select-none"
-            >
-              {nextPreview.map((p, i) => (
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 200, damping: 36 }}
+          className="relative md:flex md:items-start"
+        >
+          {/* MAIN COLUMN */}
+          <div className="flex-1 pr-12">
+            {/* Visible cards */}
+            <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {shownNow.map((p, i) => (
                 <motion.div
                   key={p.title}
+                  data-pindex={i}
+                  className="scroll-mt-24"
                   layout
-                  initial={{ opacity: 0.4, y: 10 }}
-                  animate={{ opacity: 0.6, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 36, delay: i * 0.03 }}
-                  className="relative border rounded-xl overflow-hidden bg-white dark:bg-slate-800"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 36,
+                    delay: Math.min(i * 0.03, 0.18),
+                  }}
                 >
-                  {/* mimic card height ~3/4 with blur */}
-                  <div className="p-4 h-48 md:h-56 opacity-60 blur-[1px]">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <span className="inline-flex items-center justify-center w-5 h-5">{p.icon}</span>
-                      <span className="font-medium truncate">{p.title}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {p.tags.slice(0, 3).map((t) => (
-                        <span
-                          key={t}
-                          className="px-2 py-0.5 text-xs rounded-full border bg-white/60 dark:bg-slate-700/60"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-sm line-clamp-3">{p.description}</p>
-                  </div>
-                  {/* subtle gradient to suggest more content */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent dark:from-slate-900" />
+                  <ProjectCard p={p} isColorful={theme === "colorful"} />
                 </motion.div>
               ))}
             </motion.div>
-          )}
 
-          {/* Pagination controls */}
-          <div className="flex justify-center gap-3 mt-4">
-            {hasMore ? (
-              <>
-                {/* Show more (+6) */}
-                <button
-                  onClick={() =>
-                    setVisibleCount((c) => {
-                      pendingIndexRef.current = c; // first new index
-                      return Math.min(c + 6, shown.length);
-                    })
-                  }
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
-                            bg-slate-100 hover:bg-slate-200 
-                            dark:bg-slate-700 dark:hover:bg-slate-600 
-                            border-slate-300 dark:border-slate-600"
-                >
-                  <ChevronDown className="w-4 h-4" /> Show more
-                </button>
-
-                {/* Show 6 less (only if more than 3 are visible) */}
-                {visibleCount > 3 && (
-                  <button
-                    onClick={() =>
-                      setVisibleCount((c) => {
-                        const next = Math.max(3, c - 6);
-                        pendingIndexRef.current = next - 1; // new last index
-                        return next;
-                      })
-                    }
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
-                              bg-slate-100 hover:bg-slate-200 
-                              dark:bg-slate-700 dark:hover:bg-slate-600 
-                              border-slate-300 dark:border-slate-600"
-                  >
-                    <ChevronUp className="w-4 h-4" /> Show less
-                  </button>
-                )}
-
-                {/* Show all */}
-                <button
-                  onClick={() => {
-                    if (shown.length - visibleCount <= 6) {
-                      pendingIndexRef.current = visibleCount; // behave like "Show more" for the last chunk
-                    }
-                    setVisibleCount(shown.length);
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
-                            bg-slate-100 hover:bg-slate-200 
-                            dark:bg-slate-700 dark:hover:bg-slate-600 
-                            border-slate-300 dark:border-slate-600"
-                >
-                  Show all
-                </button>
-              </>
-            ) : shown.length > 3 ? (
-              // Collapse back to 3 (scroll all the way up)
-              <button
-                onClick={() => {
-                  document
-                    .getElementById("projects")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  setVisibleCount(3);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border 
-                          bg-slate-100 hover:bg-slate-200 
-                          dark:bg-slate-700 dark:hover:bg-slate-600 
-                          border-slate-300 dark:border-slate-600"
+            {/* Ghosted preview row (~3/4 height) */}
+            {hasMore && (
+              <motion.div
+                layout
+                role="button"
+                aria-label="Show more projects"
+                onClick={() =>
+                  setVisibleCount((c) => {
+                    pendingIndexRef.current = c;
+                    return Math.min(c + 3, shown.length);
+                  })
+                }
+                className="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-5 cursor-pointer select-none"
               >
-                <ChevronUp className="w-4 h-4" /> Show less
-              </button>
-            ) : null}
+                {nextPreview.map((p, i) => (
+                  <motion.div
+                    key={p.title}
+                    layout
+                    initial={{ opacity: 0.4, y: 10 }}
+                    animate={{ opacity: 0.6, y: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 36, delay: i * 0.03 }}
+                    className={cx(
+                      "relative rounded-xl overflow-hidden border",
+                      theme === "colorful"
+                        ? cx(QUICK_CARD, "border-0") // match Quick Facts palette
+                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                    )}
+                  >
+                    <div className="p-4 h-48 md:h-56 opacity-60 blur-[1px] flex flex-col">
+                      {/* header */}
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                        <span className="inline-flex items-center justify-center w-5 h-5">{p.icon}</span>
+                        <span className="font-medium truncate">{p.title}</span>
+                      </div>
+
+                      {/* description */}
+                      <p className="text-sm line-clamp-3">{p.description}</p>
+
+                      {/* bottom area: tags + links */}
+                      <div className="mt-auto space-y-2">
+                        {/* tags */}
+                        <div className="flex flex-wrap gap-2">
+                          {p.tags.slice(0, 3).map((t) => (
+                            <span
+                              key={t}
+                              className={cx(
+                                "px-2 py-0.5 text-xs rounded-full",
+                                theme === "colorful"
+                                  ? cx(HERO_BTN, "border-0") // colorful like hero buttons
+                                  : "border bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-700"
+                              )}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* links (clickable even though the card expands on click) */}
+                        {p.links?.length ? (
+                          <div className="flex flex-wrap gap-3">
+                            {p.links.map((l) => (
+                              <a
+                                key={l.label}
+                                href={l.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className={cx(
+                                  "inline-flex items-center gap-1 text-xs underline underline-offset-4",
+                                  theme === "colorful" ? "text-slate-800 dark:text-slate-100" : "text-slate-700 dark:text-slate-200"
+                                )}
+                              >
+                                {l.label} <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    {/* no white overlay */}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
-        </div>
+
+          {/* RIGHT-SIDE RAIL (desktop/tablet) */}
+          <div className="hidden md:block md:w-10">
+            <div className="sticky top-24">
+              {/* invisible reference for measuring rail's top */}
+              <div id="rail-anchor" />
+              <motion.div
+                animate={{ y: railY }}
+                transition={{ type: "spring", stiffness: 200, damping: 30 }}
+                className="will-change-transform"
+              >
+                <ArrowRail />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* FLOATING RAIL (mobile) */}
+          <div className="md:hidden fixed right-3 bottom-24 z-40">
+            <ArrowRail className="shadow-lg" />
+          </div>
+        </motion.div>
       </Section>
 
       {/* Skills */}
@@ -696,19 +956,31 @@ export default function Portfolio() {
             { title: "ML/AI", items: ["PyTorch", "TensorRT", "torch2trt", "Tensorly", "NVIDIA Triton", "ONNX"] },
             { title: "Compression", items: ["CP", "Tucker", "Tensor Train (TT)", "Quantization", "Pruning"] },
             { title: "Systems", items: ["CUDA basics", "Jetson Nano", "Docker", "Linux"] },
-            { title: "Data/Stats", items: ["Pandas", "NumPy", "scikit‑learn", "R (lme4)"] },
+            { title: "Data/Stats", items: ["Pandas", "NumPy", "scikit-learn", "R (lme4)"] },
             { title: "Web/Apps", items: ["React", "Next.js", "FastAPI", "SQL"] },
           ].map((g) => (
             <Card
               key={g.title}
-              className="bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              className={cx(
+                theme === "colorful"
+                  ? cx(QUICK_CARD, "border-0 shadow-sm", TXT_ON_SOFT)
+                  : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              )}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">{g.title}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {g.items.map((s) => (
-                  <Badge key={s} variant="outline">{s}</Badge>
+                  <Badge
+                    key={s}
+                    variant="outline"
+                    className={cx(
+                      theme === "colorful" ? cx(HERO_BTN, "border-0") : ""
+                    )}
+                  >
+                    {s}
+                  </Badge>
                 ))}
               </CardContent>
             </Card>
@@ -724,31 +996,31 @@ export default function Portfolio() {
               school: "University of Groningen",
               degree: "MSc Artificial Intelligence",
               years: "2024 – 2026 (exp)",
-              details: [
-                'State of the Art AI "understanding"',
-                "Thesis on tensor decompositions and TensorRT",
-              ],
+              details: ['State of the Art AI "understanding"', "Thesis on tensor decompositions and TensorRT"],
             },
             {
               school: "University of York",
               degree: "BSc Computer Science and Mathematics 50/50",
               years: "2020 – 2023",
-              details: [
-                "Exploration of Computer Science and Mathematics domains",
-                "Thesis: Simulating Urban Airspace Resource Management",
-              ],
+              details: ["Exploration of Computer Science and Mathematics domains", "Thesis: Simulating Urban Airspace Resource Management"],
             },
           ].map((e) => (
             <Card
               key={e.school}
-              className="bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              className={cx(
+                theme === "colorful"
+                  ? cx(QUICK_CARD, "border-0 shadow-sm", TXT_ON_SOFT)
+                  : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              )}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">{e.school}</CardTitle>
-                <p className="text-sm text-muted-foreground">{e.degree} • {e.years}</p>
+                <p className="text-sm text-muted-foreground">
+                  {e.degree} • {e.years}
+                </p>
               </CardHeader>
               <CardContent>
-                <ul className="list-disc pl-5 text-sm space-y-1">
+                <ul className={cx("list-disc pl-5 text-sm space-y-1", theme === "colorful" && TXT_ON_SOFT)}>
                   {e.details.map((d: string) => (
                     <li key={d}>{d}</li>
                   ))}
@@ -769,13 +1041,29 @@ export default function Portfolio() {
               link: "#",
             },
           ].map((pub) => (
-            <div  key={pub.title} className="p-4 border rounded-xl bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
+            <div
+              key={pub.title}
+              className={cx(
+                "p-4 rounded-xl border",
+                theme === "colorful"
+                  ? cx(QUICK_CARD, "border-0 shadow-sm", TXT_ON_SOFT)
+                  : "bg-white/90 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              )}
+            >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <h3 className="font-medium">{pub.title}</h3>
                   <p className="text-sm text-muted-foreground">{pub.venue}</p>
                 </div>
-                <a href={pub.link} className="inline-flex items-center gap-1 text-sm underline underline-offset-4"><ExternalLink className="w-4 h-4"/> View</a>
+                <a
+                  href={pub.link}
+                  className={cx(
+                    "inline-flex items-center gap-1 text-sm underline underline-offset-4",
+                    theme === "colorful" ? "text-slate-800 dark:text-slate-100" : ""
+                  )}
+                >
+                  <ExternalLink className="w-4 h-4" /> View
+                </a>
               </div>
             </div>
           ))}
@@ -785,21 +1073,41 @@ export default function Portfolio() {
       {/* Contact */}
       <Section id="contact" title="Get in touch">
         <div className="max-w-2xl">
-          <p className="text-slate-700 dark:text-slate-300 mb-6"> If you’d like to chat about research, internships, or collaborations, ping me via email or LinkedIn. I’m especially interested in embedded AI, efficient deep learning, and robotics applications.</p>
+          <p className="text-slate-700 dark:text-slate-300 mb-6">
+            If you’d like to chat about research, internships, or collaborations, ping me via email or LinkedIn. I’m especially interested in embedded AI, efficient deep learning, and robotics applications.
+          </p>
           <div className="flex flex-wrap gap-3">
+            {/* Email = same as Download CV */}
             <a href={profile.links.email}>
-              <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600">
-                <Mail className="w-4 h-4"/> Email me
+              <Button
+                variant={theme === "colorful" ? undefined : "secondary"}
+                className={cx(
+                  "gap-2 font-semibold rounded-md",
+                  theme === "colorful" && HERO_BTN,
+                  theme === "dark" && "border-2 border-white",
+                  theme === "light" && "border-2 border-black",
+                  theme === "colorful" && "border-2 border-white"
+                )}
+              >
+                <Mail className="w-4 h-4" /> Email me
               </Button>
             </a>
+
+            {/* LinkedIn/GitHub = same as hero buttons in colorful */}
             <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
-              <Button variant="secondary" className="gap-2">
-                <Linkedin className="w-4 h-4"/> LinkedIn
+              <Button
+                variant={theme === "colorful" ? undefined : "secondary"}
+                className={cx("gap-2", theme === "colorful" && cx(HERO_BTN, "font-semibold rounded-md"))}
+              >
+                <Linkedin className="w-4 h-4" /> LinkedIn
               </Button>
             </a>
             <a href={profile.links.github} target="_blank" rel="noreferrer">
-              <Button variant="secondary" className="gap-2">
-                <Github className="w-4 h-4"/> GitHub
+              <Button
+                variant={theme === "colorful" ? undefined : "secondary"}
+                className={cx("gap-2", theme === "colorful" && cx(HERO_BTN, "font-semibold rounded-md"))}
+              >
+                <Github className="w-4 h-4" /> GitHub
               </Button>
             </a>
           </div>
