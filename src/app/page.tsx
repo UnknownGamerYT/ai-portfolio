@@ -320,116 +320,148 @@ const ProjectCard = ({ p, isColorful = false }: { p: Project; isColorful?: boole
 
 // ---------------- Page ----------------
 export default function Portfolio() {
-  // theming
+  // --- state, refs, memos, effects, and inner components (before markup) ---
+
   type Theme = "light" | "dark" | "colorful";
+  const RAIL_TWEEN_MS = 540; // ← increase for slower (e.g., 600)
+  const RAIL_EASE = "cubic-bezier(0.22,1,0.36,1)"; // try "ease-in-out" for gentler
   const pendingIndexRef = React.useRef<number | null>(null);
   const HEADER_OFFSET = 80;
-  const raf2Ref = React.useRef<number | null>(null);
-  const [showAllTags, setShowAllTags] = React.useState<boolean>(false);
-  const [selectedTags, setSelectedTags] = React.useState<Set<string>>(new Set());
-  // convenience flag
-  const isAll = selectedTags.size === 0;
-  const [visibleCount, setVisibleCount] = React.useState<number>(3);
 
-  // collect & rank tags by frequency (desc), then alphabetically
-  const { topTags, restTags, allTags } = React.useMemo(() => {
+  const [theme, setTheme] = React.useState<Theme>("dark");
+  const [showAllTags, setShowAllTags] = React.useState(false);
+  const [selectedTags, setSelectedTags] = React.useState<Set<string>>(new Set());
+  const isAll = selectedTags.size === 0;
+  const [visibleCount, setVisibleCount] = React.useState(3);
+  // ⬇️ add these near your other refs/state
+  const railRef = React.useRef<HTMLDivElement | null>(null);
+  const animateNextRef = React.useRef(false);
+
+  // ⬇️ helper: set transform + optionally animate
+  const setRailTransform = React.useCallback((y: number, animate: boolean) => {
+    const el = railRef.current;
+    if (!el) return;
+    el.style.transition = animate ? `transform ${RAIL_TWEEN_MS}ms ${RAIL_EASE}` : "transform 0s";
+    el.style.transform = `translate3d(0, ${y}px, 0)`;
+  }, []);
+
+  // collect & rank tags; stable because `projects` is a module constant
+  const { topTags, restTags } = React.useMemo(() => {
     const counts = new Map<string, number>();
     projects.forEach((p) => p.tags.forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
-
     const sortedTags = Array.from(counts.entries())
       .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
       .map(([t]) => t);
-
     const tops = sortedTags.slice(0, 6);
     const rest = sortedTags.slice(6);
-
-    return { topTags: ["All", ...tops], restTags: rest, allTags: ["All", ...sortedTags] };
-  }, [projects]);
+    return { topTags: ["All", ...tops], restTags: rest };
+  }, []);
 
   const sorted = React.useMemo(() => {
     const arr = [...projects];
-    arr.sort((a: Project, b: Project) => Number(!!b.featured) - Number(!!a.featured));
+    arr.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
     return arr;
-  }, [projects]);
+  }, []);
 
   const shown = React.useMemo(() => {
-    if (selectedTags.size === 0) return sorted; // "All"
-    return sorted.filter((p) => p.tags.some((t) => selectedTags.has(t))); // OR logic
+    if (selectedTags.size === 0) return sorted;
+    return sorted.filter((p) => p.tags.some((t) => selectedTags.has(t)));
   }, [selectedTags, sorted]);
 
   const shownNow = React.useMemo(() => shown.slice(0, visibleCount), [shown, visibleCount]);
   const nextPreview = React.useMemo(() => shown.slice(visibleCount, visibleCount + 3), [shown, visibleCount]);
   const hasMore = shown.length > visibleCount;
-  const [railY, setRailY] = React.useState(0);
-
+      // ⬇️ recompute position, then apply transform
   const syncRailToLast = React.useCallback(() => {
     const lastIdx = Math.max(0, Math.min(visibleCount - 1, shown.length - 1));
+    animateNextRef.current = true; // make the next sync tween from old->new
     const lastEl = document.querySelector<HTMLElement>(`[data-pindex="${lastIdx}"]`);
     const railAnchor = document.getElementById("rail-anchor");
     if (!lastEl || !railAnchor) return;
-
     const desired = lastEl.getBoundingClientRect().top - railAnchor.getBoundingClientRect().top;
-    setRailY(Math.max(0, Math.round(desired)));
-  }, [visibleCount, shown.length]);
-
-  React.useLayoutEffect(() => {
-    // place the rail at the correct position on first render
-    syncRailToLast();
-  }, [syncRailToLast]);
-
-  const [theme, setTheme] = React.useState<Theme>("dark");
-
+    const y = Math.max(0, Math.round(desired));
+    setRailTransform(y, animateNextRef.current);
+    animateNextRef.current = false; // consume the one-shot animation flag
+  }, [visibleCount, shown.length, setRailTransform]);
+  // ONE effect to handle theme toggle, initial/changed syncs, listeners, fonts, fallback
   React.useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
-  }, [theme]);
+  // dark class toggle
+  document.documentElement.classList.toggle("dark", theme === "dark");
 
-  React.useEffect(() => {
-    const topIdx = pendingIndexRef.current;
-
-    // Scroll PAGE to the first newly visible card (as before)
-    if (topIdx != null) {
-      const topEl = document.querySelector<HTMLElement>(`[data-pindex="${topIdx}"]`);
-      if (topEl) {
-        const top = topEl.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-        window.scrollTo({ top, behavior: "smooth" });
-      }
-    }
-
-    // Try after layout, then again once the smooth scroll settles
-    // (double rAF = next paint; debounced scroll = after motion)
-    const raf1 = requestAnimationFrame(() => {
-      raf2Ref.current = requestAnimationFrame(() => {
-        syncRailToLast();
+  // scroll to first newly visible card (if any)
+  const topIdx = pendingIndexRef.current;
+  if (topIdx != null) {
+    const el = document.querySelector<HTMLElement>(`[data-pindex="${topIdx}"]`);
+    if (el) {
+      window.scrollTo({
+        top: el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET,
+        behavior: "smooth",
       });
-    });
-
-    let debounce: number | undefined;
-    const onScroll = () => {
-      if (debounce) window.clearTimeout(debounce);
-      debounce = window.setTimeout(syncRailToLast, 120);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    const fallback = window.setTimeout(syncRailToLast, 450);
-
+    }
     pendingIndexRef.current = null;
+  }
+  
+  // rAF-throttled scroll: follow instantly (no tween)
+  let ticking = false, raf1 = 0, raf2 = 0, fallback = 0;
+  const onScroll = () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(() => {
+        // scrolling should NOT tween
+        animateNextRef.current = false;
+        syncRailToLast();
+        ticking = false;
+      });
+    }
+  };
+
+  const syncAfterLayout = () => {
+    cancelAnimationFrame(raf1); cancelAnimationFrame(raf2);
+    raf1 = requestAnimationFrame(() => { raf2 = requestAnimationFrame(syncRailToLast); });
+  };
+
+  const onResize = () => { animateNextRef.current = false; syncAfterLayout(); };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", onResize);
+
+  // avoid font-load jumps
+  (document as unknown as { fonts?: { ready?: Promise<void> } }).fonts?.ready?.then(syncAfterLayout);
+
+  // initial + fallback sync
+  syncAfterLayout();
+  fallback = window.setTimeout(syncRailToLast, 450) as unknown as number;
+
+  return () => {
+    cancelAnimationFrame(raf1); cancelAnimationFrame(raf2);
+    window.removeEventListener("scroll", onScroll);
+    window.removeEventListener("resize", onResize);
+    window.removeEventListener("orientationchange", onResize);
+    if (fallback) clearTimeout(fallback);
+  };
+}, [theme, showAllTags, selectedTags, visibleCount, shown.length, syncRailToLast]);
 
 
-    return () => {
-      cancelAnimationFrame(raf1);
-      if (raf2Ref.current != null) cancelAnimationFrame(raf2Ref.current);
-      raf2Ref.current = null;
 
-      window.removeEventListener("scroll", onScroll);
-      if (debounce) window.clearTimeout(debounce);
-      window.clearTimeout(fallback);
-    };
-  }, [visibleCount, syncRailToLast]);
 
-  // --- Right-side arrow rail (matches filter buttons) ---
+  // --- Right-side arrow rail (no animations; instant re-measure after clicks) ---
   const ArrowRail: React.FC<{ className?: string }> = ({ className = "" }) => {
+    // queue a double-RAF measure after any click that changes layout
+    const raf1 = React.useRef<number | null>(null);
+    const raf2 = React.useRef<number | null>(null);
+    const queueSync = React.useCallback(() => {
+      if (raf1.current) cancelAnimationFrame(raf1.current);
+      if (raf2.current) cancelAnimationFrame(raf2.current);
+      raf1.current = requestAnimationFrame(() => {
+        raf2.current = requestAnimationFrame(syncRailToLast);
+      });
+    }, [syncRailToLast]);
+    React.useEffect(() => () => {
+      if (raf1.current) cancelAnimationFrame(raf1.current);
+      if (raf2.current) cancelAnimationFrame(raf2.current);
+    }, []);
+
     const canStepUpOne = visibleCount > 3;
     const canStepUpAll = visibleCount > 3;
     const canStepDownOne = shown.length > visibleCount;
@@ -443,41 +475,39 @@ export default function Portfolio() {
       cx(
         baseBtn,
         theme === "colorful"
-          ? cx(HERO_BTN, "border-0") // same as selected filter chip
-          : "bg-slate-100 hover:bg-slate-200 border border-slate-300 " +
-            "dark:bg-slate-700 dark:hover:bg-slate-600 dark:border-slate-600",
-        !enabled && "pointer-events-none"
+          ? "bg-transparent border border-white hover:bg-white/10"
+          : "bg-transparent border border-slate-300 hover:bg-slate-200 dark:border-slate-600 dark:hover:bg-slate-700",
+        !enabled && "opacity-40 pointer-events-none"
       );
 
     return (
-      <motion.div
-        layout
+      <div
         className={cx(
           "flex flex-col items-center gap-2 p-1 rounded-xl backdrop-blur",
           theme === "colorful"
-            ? cx(AURORA_SOFT, "border-0 shadow-sm", TXT_ON_SOFT) // same as unselected filter chip
+            ? cx(AURORA_SOFT, "border-0 shadow-sm", TXT_ON_SOFT) // match unselected filter chip
             : "bg-white/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-sm",
+          "transition-none", // <- ensure no CSS transitions on the container
           className
         )}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22 }}
       >
-        {/* Go ALL the way up (collapse to 3) */}
+        {/* ALL UP */}
         <button
           aria-label="Show first 3"
           className={btnCx(canStepUpAll)}
           onClick={() => {
             document.getElementById("projects")?.scrollIntoView({ behavior: "smooth", block: "start" });
             setVisibleCount(3);
+            animateNextRef.current = true; // make the next sync tween from old->new
             pendingIndexRef.current = 0;
+            queueSync();
           }}
           disabled={!canStepUpAll}
         >
-          <ChevronsUp className="w-5 h-5 text-black dark:text-black" />
+          <ChevronsUp className="w-5 h-5 text-black dark:text-white" />
         </button>
 
-        {/* Step UP (show 6 fewer) */}
+        {/* UP 6 fewer */}
         <button
           aria-label="Show 6 fewer"
           className={btnCx(canStepUpOne)}
@@ -487,46 +517,52 @@ export default function Portfolio() {
               pendingIndexRef.current = Math.max(0, next - 6);
               return next;
             });
+            animateNextRef.current = true; // make the next sync tween from old->new
+            queueSync();
           }}
           disabled={!canStepUpOne}
         >
-          <ChevronUp className="w-5 h-5 text-black dark:text-black" />
+          <ChevronUp className="w-5 h-5 text-black dark:text-white" />
         </button>
 
-        {/* Step DOWN (show 6 more) */}
+        {/* DOWN 6 more */}
         <button
           aria-label="Show 6 more"
           className={btnCx(canStepDownOne)}
           onClick={() => {
             setVisibleCount((c) => {
-              pendingIndexRef.current = c;
+              pendingIndexRef.current = c; // first newly visible index
               return Math.min(c + 6, shown.length);
             });
+            animateNextRef.current = true; // make the next sync tween from old->new
+            queueSync();
           }}
           disabled={!canStepDownOne}
         >
-          <ChevronDown className="w-5 h-5 text-black dark:text-black" />
+          <ChevronDown className="w-5 h-5 text-black dark:text-white" />
         </button>
 
-        {/* Go ALL the way down (show all) */}
+        {/* ALL DOWN */}
         <button
           aria-label="Show all"
           className={btnCx(canStepDownAll)}
           onClick={() => {
-            if (shown.length - visibleCount <= 6) {
-              pendingIndexRef.current = visibleCount;
-            }
+            if (shown.length - visibleCount <= 6) pendingIndexRef.current = visibleCount;
             setVisibleCount(shown.length);
+            animateNextRef.current = true; // make the next sync tween from old->new
+            queueSync();
           }}
           disabled={!canStepDownAll}
         >
-          <ChevronsDown className="w-5 h-5 text-black dark:text-black" />
+          <ChevronsDown className="w-5 h-5 text-black dark:text-white" />
         </button>
-      </motion.div>
+      </div>
     );
   };
 
 
+
+  // --- Theme toggle (3-way) ---
   const ThemeToggle: React.FC<{
     theme: "light" | "dark" | "colorful";
     setTheme: (t: "light" | "dark" | "colorful") => void;
@@ -557,41 +593,23 @@ export default function Portfolio() {
 
     return (
       <div role="group" aria-label="Theme" className="inline-flex items-center gap-1 p-1 rounded-lg bg-transparent">
-        <button
-          type="button"
-          aria-pressed={theme === "light"}
-          title="Light"
-          className={itemCx("light")}
-          onClick={() => theme !== "light" && setTheme("light")}
-        >
+        <button type="button" aria-pressed={theme === "light"} title="Light" className={itemCx("light")} onClick={() => theme !== "light" && setTheme("light")}>
           <Sun className="w-4 h-4" />
           <span className="hidden sm:inline">Light</span>
         </button>
-
-        <button
-          type="button"
-          aria-pressed={theme === "dark"}
-          title="Dark"
-          className={itemCx("dark")}
-          onClick={() => theme !== "dark" && setTheme("dark")}
-        >
+        <button type="button" aria-pressed={theme === "dark"} title="Dark" className={itemCx("dark")} onClick={() => theme !== "dark" && setTheme("dark")}>
           <Moon className="w-4 h-4" />
           <span className="hidden sm:inline">Dark</span>
         </button>
-
-        <button
-          type="button"
-          aria-pressed={theme === "colorful"}
-          title="Colorful"
-          className={itemCx("colorful")}
-          onClick={() => theme !== "colorful" && setTheme("colorful")}
-        >
+        <button type="button" aria-pressed={theme === "colorful"} title="Colorful" className={itemCx("colorful")} onClick={() => theme !== "colorful" && setTheme("colorful")}>
           <Palette className="w-4 h-4" />
           <span className="hidden sm:inline">Colorful</span>
         </button>
       </div>
     );
   };
+
+  // --- markup starts below (Nav/Hero/Sections/...)
 
   return (
     <div
@@ -758,6 +776,7 @@ export default function Portfolio() {
                         });
                       }
                       setVisibleCount(3);
+                      animateNextRef.current = true; // make the next sync tween from old->new
                     }}
                     aria-pressed={active}
                     className={cx(
@@ -854,6 +873,7 @@ export default function Portfolio() {
                     pendingIndexRef.current = c;
                     return Math.min(c + 3, shown.length);
                   })
+                  
                 }
                 className="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-5 cursor-pointer select-none"
               >
@@ -932,17 +952,15 @@ export default function Portfolio() {
           {/* RIGHT-SIDE RAIL (desktop/tablet) */}
           <div className="hidden md:block md:w-10">
             <div className="sticky top-24">
-              {/* invisible reference for measuring rail's top */}
+              {/* reference for measuring rail's top */}
               <div id="rail-anchor" />
-              <motion.div
-                animate={{ y: railY }}
-                transition={{ type: "spring", stiffness: 200, damping: 30 }}
-                className="will-change-transform"
-              >
+              {/* this element is the ONLY thing we translate */}
+              <div ref={railRef} className="will-change-transform" style={{ transform: "translate3d(0,0,0)" }}>
                 <ArrowRail />
-              </motion.div>
+              </div>
             </div>
           </div>
+
 
           {/* FLOATING RAIL (mobile) */}
           <div className="md:hidden fixed right-3 bottom-24 z-40">
